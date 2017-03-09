@@ -626,7 +626,8 @@ namespace Tmds.Kestrel.Linux
                 {
                     TSocket removedSocket;
                     _sockets.TryRemove(tsocket.Key, out removedSocket);
-                    tsocket.Socket.Dispose();
+                    // close causes remove from epoll (CLOEXEC)
+                    tsocket.Socket.Dispose(); // will close (no concurrent users)
                 }
                 else
                 {
@@ -680,8 +681,8 @@ namespace Tmds.Kestrel.Linux
             {
                 TSocket removedSocket;
                 _sockets.TryRemove(acceptSocket.Key, out removedSocket);
-                _epoll.Control(EPollOperation.Delete, removedSocket.Socket, EPollEvents.None, new EPollData());
-                acceptSocket.Socket.Dispose();
+                // close causes remove from epoll (CLOEXEC)
+                acceptSocket.Socket.Dispose(); // will close (no concurrent users)
             }
             _acceptSockets.Clear();
             TaskCompletionSource<object> tcs;
