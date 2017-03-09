@@ -328,7 +328,9 @@ namespace Tmds.Kestrel.Linux
                     {
                         Flags = SocketFlags.TypeClient,
                         Key = key,
-                        Socket = clientSocket
+                        Socket = clientSocket,
+                        PeerAddress = clientSocket.GetPeerIPAddress(),
+                        LocalAddress = clientSocket.GetLocalIPAddress()
                     };
 
                     clientSocket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.NoDelay, 1);

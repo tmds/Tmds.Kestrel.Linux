@@ -39,6 +39,8 @@ namespace Tmds.Kestrel.Linux
             public int         Key;
             public Socket      Socket;
             public IPipeReader PipeReader;
+            public IPEndPoint  PeerAddress;
+            public IPEndPoint  LocalAddress;
 
             private Action _writableCompletion;
             bool IWritableAwaiter.IsCompleted
@@ -135,25 +137,9 @@ namespace Tmds.Kestrel.Linux
             public ReadableAwaitable ReadableAwaitable => new ReadableAwaitable(this);
             public WritableAwaitable WritableAwaitable => new WritableAwaitable(this);
 
-            IPEndPoint IConnectionInformation.RemoteEndPoint
-            {
-                get
-                {
-                    IPEndPoint rv;
-                    Socket.TryGetPeerIPAddress(out rv);
-                    return rv;
-                }
-            }
+            IPEndPoint IConnectionInformation.RemoteEndPoint => PeerAddress;
 
-            IPEndPoint IConnectionInformation.LocalEndPoint
-            {
-                get
-                {
-                    IPEndPoint rv;
-                    Socket.TryGetLocalIPAddress(out rv);
-                    return rv;
-                }
-            }
+            IPEndPoint IConnectionInformation.LocalEndPoint => LocalAddress;
         }
 
         interface IReadableAwaiter
