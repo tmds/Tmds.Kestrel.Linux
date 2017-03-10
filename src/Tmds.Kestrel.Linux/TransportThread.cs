@@ -362,21 +362,18 @@ namespace Tmds.Kestrel.Linux
                 {
                     var readResult = await reader.ReadAsync();
                     var buffer = readResult.Buffer;
+                    ReadCursor end = buffer.End;
                     try
                     {
-                        // We need to call Advance to end the read
-
                         if (buffer.IsEmpty && readResult.IsCompleted)
                         {
                             // EOF
-                            reader.Advance(buffer.End);
                             break;
                         }
 
                         if (readResult.IsCancelled)
                         {
                             // TransportThread is stopping
-                            reader.Advance(buffer.End);
                             break;
                         }
 
@@ -385,15 +382,9 @@ namespace Tmds.Kestrel.Linux
                             var result = TrySend(tsocket.Socket, ref buffer);
                             if (result.IsSuccess)
                             {
-                                if (result.Value == 0)
+                                if (result.Value != 0)
                                 {
-                                    // There was no data to send
-                                    reader.Advance(buffer.End);
-                                }
-                                else
-                                {
-                                    var end = buffer.Move(buffer.Start, result.Value);
-                                    reader.Advance(end);
+                                    end = buffer.Move(buffer.Start, result.Value);
                                 }
                             }
                             else if (result == PosixResult.EAGAIN || result == PosixResult.EWOULDBLOCK)
@@ -402,12 +393,11 @@ namespace Tmds.Kestrel.Linux
                                 if (stopping)
                                 {
                                     // TransportThread is stopping
-                                    reader.Advance(buffer.End);
                                     break;
                                 }
                                 else
                                 {
-                                    reader.Advance(buffer.Start);
+                                    end = buffer.Start;
                                 }
                             }
                             else
@@ -415,15 +405,11 @@ namespace Tmds.Kestrel.Linux
                                 result.ThrowOnError();
                             }
                         }
-                        else
-                        {
-                            reader.Advance(buffer.End);
-                        }
                     }
-                    catch
+                    finally
                     {
-                        reader.Advance(buffer.End);
-                        throw;
+                        // We need to call Advance to end the read
+                        reader.Advance(end);
                     }
                 }
                 reader.Complete();
