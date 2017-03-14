@@ -84,10 +84,7 @@ namespace Tmds.Kestrel.Linux
             {
                 if (stopping)
                 {
-                    lock (this)
-                    {
-                        Flags |= SocketFlags.Stopping;
-                    }
+                    AddFlags(SocketFlags.Stopping);
                 }
 
                 Action continuation = Interlocked.Exchange(ref _writableCompletion, _completedSentinel);
@@ -130,10 +127,7 @@ namespace Tmds.Kestrel.Linux
             {
                 if (stopping)
                 {
-                    lock (this)
-                    {
-                        Flags |= SocketFlags.Stopping;
-                    }
+                    AddFlags(SocketFlags.Stopping);
                 }
 
                 Action continuation = Interlocked.Exchange(ref _readableCompletion, _completedSentinel);
