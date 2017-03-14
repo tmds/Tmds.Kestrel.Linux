@@ -17,7 +17,13 @@ namespace Tmds.Kestrel.Linux
         // the remaining bits of the EPollData are the key
         // of the _sockets dictionary.
         private const int DupKeyMask        = 1 << 31;
-        private static PipeOptions DefaultPipeOptions = new PipeOptions();
+        private static PipeOptions DefaultPipeOptions = new PipeOptions()
+        {
+            // Ensure FlushAsync waits for the reader to catch-up
+            // https://github.com/dotnet/corefxlab/issues/1316
+            MaximumSizeHigh = 1,
+            MaximumSizeLow = 1
+        };
 
         enum State
         {
