@@ -21,6 +21,7 @@ namespace Tmds.Kestrel.Linux
         {
             // Ensure FlushAsync waits for the reader to catch-up
             // https://github.com/dotnet/corefxlab/issues/1316
+            // TODO: What values to use here...?
             MaximumSizeHigh = 1,
             MaximumSizeLow = 1
         };
