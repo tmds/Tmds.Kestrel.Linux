@@ -139,5 +139,136 @@ namespace Tests
                 }
             }
         }
+
+        [Fact]
+        public async Task Receive()
+        {
+            // client send 1M bytes which are an int counter
+            // server receives and checkes the counting
+            const int receiveLength = 1000000;
+            TestServer.ConnectionHandler connectionHandler = async (input, output) =>
+            {
+                int bytesReceived = 0;
+                while (true)
+                {
+                    var readResult = await input.ReadAsync();
+                    var buffer = readResult.Buffer;
+                    if (buffer.IsEmpty && readResult.IsCompleted)
+                    {
+                        input.Advance(buffer.End);
+                        break;
+                    }
+                    foreach (var memory in buffer)
+                    {
+                        ArraySegment<byte> segment;
+                        Assert.True(memory.TryGetArray(out segment));
+                        // test assumes memory.Length is a multiple of 4
+                        CheckMemory(segment, startValue: bytesReceived / 4);
+                        bytesReceived += memory.Length;
+                    }
+                    input.Advance(buffer.End);
+                }
+                Assert.Equal(receiveLength, bytesReceived);
+                output.Complete();
+                input.Complete();
+            };
+
+            using (var testServer = new TestServer(connectionHandler))
+            {
+                await testServer.BindAsync();
+                using (var client = testServer.ConnectTo())
+                {
+                    var buffer = new byte[1000000];
+                    FillBuffer(new ArraySegment<byte>(buffer), startValue: 0);
+                    var result = client.Send(new ArraySegment<byte>(buffer));
+                    Assert.Equal(receiveLength, result);
+
+                    // wait for the server to stop
+                    client.Shutdown(SocketShutdown.Send);
+                    var receiveBuffer = new byte[1];
+                    client.Receive(new ArraySegment<byte>(receiveBuffer));
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Send()
+        {
+            // server send 1M+ bytes which are an int counter
+            // client receives and checkes the counting
+            const int minSendLength = 1000000;
+            TestServer.ConnectionHandler connectionHandler = async (input, output) =>
+            {
+                int bytesSent = 0;
+                var buffer = output.Alloc(0);
+                do
+                {
+                    buffer.Ensure(1);
+                    var memory = buffer.Memory;
+                    ArraySegment<byte> segment;
+                    Assert.True(memory.TryGetArray(out segment));
+                    // test assumes memory.Length is a multiple of 4
+                    FillBuffer(segment, startValue: bytesSent / 4);
+                    buffer.Advance(memory.Length);
+                    bytesSent += memory.Length;
+                } while (bytesSent < minSendLength);
+                // single flush
+                await buffer.FlushAsync();
+                output.Complete();
+                input.Complete();
+            };
+
+            using (var testServer = new TestServer(connectionHandler))
+            {
+                await testServer.BindAsync();
+                using (var client = testServer.ConnectTo())
+                {
+                    int totalReceived = 0;
+                    var receiveBuffer = new byte[4000];
+                    do
+                    {
+                        int received = client.Receive(new ArraySegment<byte>(receiveBuffer));
+                        if (received == 0)
+                        {
+                            break;
+                        }
+                        // test assumes memory.Length is a multiple of 4
+                        CheckMemory(new ArraySegment<byte>(receiveBuffer, 0, received), startValue: totalReceived / 4);
+                        totalReceived += received;
+                    } while (true);
+                    Assert.True(totalReceived >= minSendLength);
+                }
+            }
+        }
+
+        private unsafe static void FillBuffer(ArraySegment<byte> segment, int startValue)
+        {
+            fixed (byte* bytePtr = segment.Array)
+            {
+                int* intPtr = (int*)(bytePtr + segment.Offset);
+                int currentValue = startValue;
+                for (int i = 0; i < segment.Count / 4; i++)
+                {
+                    *intPtr = currentValue;
+                    intPtr++;
+                    currentValue++;
+                }
+            }
+        }
+
+        private unsafe static void CheckMemory(ArraySegment<byte> segment, int startValue)
+        {
+            fixed (byte* bytePtr = segment.Array)
+            {
+                int* intPtr = (int*)(bytePtr + segment.Offset);
+                int currentValue = startValue;
+                for (int i = 0; i < segment.Count / 4; i++)
+                {
+                    Assert.Equal(currentValue, *intPtr);
+                    currentValue++;
+                    intPtr++;
+                }
+            }
+        }
     }
 }
