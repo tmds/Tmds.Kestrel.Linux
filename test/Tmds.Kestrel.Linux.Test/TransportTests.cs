@@ -163,6 +163,8 @@ namespace Tests
                         ArraySegment<byte> segment;
                         Assert.True(memory.TryGetArray(out segment));
                         // test assumes memory.Length is a multiple of 4
+                        Assert.True(segment.Count % 4 == 0);
+                        Assert.True(bytesReceived % 4 == 0);
                         CheckMemory(segment, startValue: bytesReceived / 4);
                         bytesReceived += memory.Length;
                     }
@@ -208,6 +210,8 @@ namespace Tests
                     ArraySegment<byte> segment;
                     Assert.True(memory.TryGetArray(out segment));
                     // test assumes memory.Length is a multiple of 4
+                    Assert.True(segment.Count % 4 == 0);
+                    Assert.True(bytesSent % 4 == 0);
                     FillBuffer(segment, startValue: bytesSent / 4);
                     buffer.Advance(memory.Length);
                     bytesSent += memory.Length;
@@ -233,6 +237,8 @@ namespace Tests
                             break;
                         }
                         // test assumes memory.Length is a multiple of 4
+                        Assert.True(received % 4 == 0);
+                        Assert.True(totalReceived % 4 == 0);
                         CheckMemory(new ArraySegment<byte>(receiveBuffer, 0, received), startValue: totalReceived / 4);
                         totalReceived += received;
                     } while (true);
