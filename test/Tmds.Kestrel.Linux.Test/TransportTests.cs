@@ -291,7 +291,7 @@ namespace Tests
                         *ptr++ = *pMemory++;
                     }
                     length -= read;
-                    if (read == remainder)
+                    if (read == (4 - offset))
                     {
                         Assert.Equal(currentValue++, remainder);
                     }
@@ -310,7 +310,6 @@ namespace Tests
                 if (length != 0)
                 {
                     pMemory = (byte*)pMemoryInt;
-                    remainder = 0;
                     byte* ptr = (byte*)&remainder;
                     for (int i = 0; i < length; i++)
                     {
