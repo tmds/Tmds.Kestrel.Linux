@@ -535,6 +535,10 @@ namespace Tmds.Kestrel.Linux
 
         private unsafe void Receive(Socket socket, int availableBytes, ref WritableBuffer buffer)
         {
+            // WritableBuffer doesn't support non-contiguous writes	
+            // https://github.com/dotnet/corefxlab/issues/1233
+            // We do it anyhow, but we need to make sure we fill every Memory we allocate.
+
             // 64 IOVectors, take up 1KB of stack, can receive up to 256KB
             const int MaxIOVectorLength = 64;
             const int bytesPerMemory    = 4096 - 64; // MemoryPool._blockStride - MemoryPool._blockUnused
@@ -562,9 +566,7 @@ namespace Tmds.Kestrel.Linux
 
                 if (allocated >= availableBytes)
                 {
-                    // We can't allocate more memory than there are available bytes
-                    // since we can't fill them up. Every Memory (except the last one)
-                    // must be filled completely.
+                    // Every Memory (except the last one) must be filled completely.
                     ioVectorsUsed++;
                     break;
                 }
