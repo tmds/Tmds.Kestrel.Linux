@@ -603,8 +603,8 @@ namespace Tmds.Kestrel.Linux
                     {
                         var length = ioVectors[i].Count.ToUInt32();
                         var skipped = Math.Min(skip, length);
-                        ioVectors[i].Count = new UIntPtr(length - skip);
-                        ioVectors[i].Base += skip;
+                        ioVectors[i].Count = new UIntPtr(length - skipped);
+                        ioVectors[i].Base += skipped;
                         skip -= skipped;
                     }
                 }
