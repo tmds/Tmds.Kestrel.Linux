@@ -232,11 +232,11 @@ namespace Tests
             PollEvents(epoll, maxEvents: 10, timeout: milliSecondTimeout);
             var endTime = Environment.TickCount;
             bool timeoutOK = endTime - startTime >= milliSecondTimeout;
-            Assert.True(timeoutOK);
             if (!timeoutOK)
             {
                 System.Console.WriteLine($"{endTime - startTime} >= {milliSecondTimeout}");
             }
+            Assert.True(timeoutOK);
 
             epoll.Dispose();
         }
