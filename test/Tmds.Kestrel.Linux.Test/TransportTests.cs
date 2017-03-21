@@ -232,15 +232,15 @@ namespace Tests
             }
         }
 
-        private unsafe static void FillBuffer(ref WritableBuffer buffer, int count)
+        private unsafe static void FillBuffer(ref WritableBuffer wb, int count)
         {
             for (int i = 0; i < count; i++)
             {
-                buffer.Ensure(4);
+                wb.Ensure(4);
                 void* pointer;
-                Assert.True(buffer.Memory.TryGetPointer(out pointer));
+                Assert.True(wb.Buffer.TryGetPointer(out pointer));
                 *(int*)pointer = i;
-                buffer.Advance(4);
+                wb.Advance(4);
             }
         }
 
@@ -262,10 +262,6 @@ namespace Tests
             Assert.True(segment.Count % 4 == 0);
             fixed (byte* bytePtr = segment.Array)
             {
-                if (s_travis)
-                {
-                    System.Console.WriteLine($"AssertCounter {new IntPtr(bytePtr)}, {segment.Count} bytes, starting at {value}");
-                }
                 int* intPtr = (int*)(bytePtr + segment.Offset);
                 for (int i = 0; i < segment.Count / 4; i++)
                 {
@@ -326,7 +322,5 @@ namespace Tests
             }
             remainderRef = remainder;
         }
-
-        private static bool s_travis = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TRAVIS"));
     }
 }
