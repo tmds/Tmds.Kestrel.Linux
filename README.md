@@ -21,6 +21,12 @@ NuGet feed: `https://www.myget.org/F/tmds/api/v3/index.json`
 
 Dependency: `"Tmds.Kestrel.Linux": "0.1.0-*"`
 
+# Building
+
+Use make to build:
+
+    $ make
+
 # Design
 
 ## General

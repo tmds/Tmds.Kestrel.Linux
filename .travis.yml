@@ -8,10 +8,7 @@ before_install:
 - sudo apt-get update
 - sudo apt-get install dotnet-dev-1.0.0-preview2-1-003177
 script:
-- dotnet restore
-- pushd test/Tmds.Kestrel.Linux.Test && dotnet test && popd
-- dotnet pack src/Tmds.Kestrel.Linux --configuration Release --version-suffix "$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER"
-  --output .
+- VERSION_SUFFIX="$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER" make
 after_success:
 - 'if [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
   curl -H "X-NuGet-ApiKey: $NUGET_APIKEY" -T Tmds.Kestrel.Linux.*-$TRAVIS_BRANCH-$TRAVIS_BUILD_NUMBER.nupkg
