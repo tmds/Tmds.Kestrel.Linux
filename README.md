@@ -53,3 +53,15 @@ See [SocketAsyncEngine.Unix.cs](https://github.com/dotnet/corefx/blob/4611d411d8
 The implementation starts a number of threads which each accept connections. This is based on [`SO_REUSEPORT`](https://lwn.net/Articles/542629/)
 socket option. This option allow multiple sockets to concurrently bind and listen to the same port. The kernel performs
 load-balancing between the listen sockets.
+
+## Socket options
+
+### SO_REUSEPORT
+
+This option allow multiple sockets to concurrently bind and listen to the same port. The kernel performs
+load-balancing between the listen sockets.
+
+#### TCP_DEFER_ACCEPT
+
+This option can be used for protocols where the client sends first (like HTTP). Instead of being notified of a new connection when the TCP connection is set-up,
+the application is notified when the connection was setup and data has arrived.
