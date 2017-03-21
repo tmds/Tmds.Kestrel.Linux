@@ -61,7 +61,7 @@ load-balancing between the listen sockets.
 This option allow multiple sockets to concurrently bind and listen to the same port. The kernel performs
 load-balancing between the listen sockets.
 
-#### TCP_DEFER_ACCEPT
+### TCP_DEFER_ACCEPT
 
 This option can be used for protocols where the client sends first (like HTTP). Instead of being notified of a new connection when the TCP connection is set-up,
 the application is notified when the connection was setup and data has arrived.
