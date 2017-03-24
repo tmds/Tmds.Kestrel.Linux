@@ -91,16 +91,14 @@ namespace ConsoleApplication
 
                     // Respond
                     var output = writer.Alloc();
-                    var formatter = new OutputFormatter<WritableBuffer>(output, TextEncoder.Utf8);
-                    formatter.Append("HTTP/1.1 200 OK");
-                    formatter.Append("\r\nContent-Length: 13");
-                    formatter.Append("\r\nContent-Type: text/plain");
-                    formatter.Format("\r\nDate: {0:R}", DateTime.UtcNow);
-                    formatter.Append("\r\nServer: System.IO.Pipelines");
-                    formatter.Append("\r\n\r\n");
+                    output.Append("HTTP/1.1 200 OK", TextEncoder.Utf8);
+                    output.Append("\r\nContent-Length: 13", TextEncoder.Utf8);
+                    output.Append("\r\nContent-Type: text/plain", TextEncoder.Utf8);
+                    output.Append("\r\nDate: ", TextEncoder.Utf8); output.Append(DateTime.UtcNow, TextEncoder.Utf8, 'R');
+                    output.Append("\r\nServer: System.IO.Pipelines", TextEncoder.Utf8);
+                    output.Append("\r\n\r\n", TextEncoder.Utf8);
                     // write body
-                    formatter.Append("Hello, World!");
-
+                    output.Append("Hello, World!", TextEncoder.Utf8);
                     await output.FlushAsync();
                 }
             }
