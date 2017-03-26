@@ -719,16 +719,7 @@ namespace Tmds.Kestrel.Linux
         private ReadableAwaitable Readable(TSocket tsocket)
         {
             tsocket.ResetReadableAwaitable();
-            bool registered = (tsocket.Flags & SocketFlags.EPollRegistered) != 0;
-            if (!registered)
-            {
-                tsocket.AddFlags(SocketFlags.EPollRegistered);
-            }
-            _epoll.Control(registered ? EPollOperation.Modify : EPollOperation.Add,
-                            tsocket.Socket,
-                            EPollEvents.Readable | EPollEvents.OneShot,
-                            new EPollData{ Int1 = tsocket.Key, Int2 = tsocket.Key });
-            return tsocket.ReadableAwaitable;
+            return new ReadableAwaitable(tsocket, _epoll);
         }
 
         private void CleanupSocket(TSocket tsocket, SocketShutdown shutdown)

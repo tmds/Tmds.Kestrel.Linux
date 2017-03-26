@@ -104,28 +104,29 @@ namespace Tmds.Kestrel.Linux
             }
 
             private Action _readableCompletion;
-            bool IReadableAwaiter.IsCompleted
-            {
-                get
-                {
-                    return ReferenceEquals(_completedSentinel, Volatile.Read(ref _readableCompletion));
-                }
-            }
             bool IReadableAwaiter.GetResult()
             {
                 return (Flags & SocketFlags.Stopping) == 0;
             }
-            void IReadableAwaiter.OnCompleted(Action continuation)
+            void IReadableAwaiter.OnCompleted(Action continuation, EPoll epoll)
             {
-                if (continuation != null)
-                {
-                    var oldValue = Interlocked.CompareExchange(ref _readableCompletion, continuation, null);
+                Volatile.Write(ref _readableCompletion, continuation);
 
-                    if (ReferenceEquals(oldValue, _completedSentinel))
+                try
+                {
+                    bool registered = (Flags & SocketFlags.EPollRegistered) != 0;
+                    if (!registered)
                     {
-                        // already complete; calback sync
-                        continuation.Invoke();
+                        AddFlags(SocketFlags.EPollRegistered);
                     }
+                    epoll.Control(registered ? EPollOperation.Modify : EPollOperation.Add,
+                        Socket,
+                        EPollEvents.Readable | EPollEvents.OneShot,
+                        new EPollData{ Int1 = Key, Int2 = Key });
+                }
+                catch (System.Exception)
+                {
+                    CompleteReadable(stopping: true);
                 }
             }
             public void CompleteReadable(bool stopping = false)
@@ -146,7 +147,6 @@ namespace Tmds.Kestrel.Linux
                 Volatile.Write(ref _readableCompletion, null);
             }
 
-            public ReadableAwaitable ReadableAwaitable => new ReadableAwaitable(this);
             public WritableAwaitable WritableAwaitable => new WritableAwaitable(this);
 
             IPEndPoint IConnectionInformation.RemoteEndPoint => PeerAddress;
@@ -156,11 +156,9 @@ namespace Tmds.Kestrel.Linux
 
         interface IReadableAwaiter
         {
-            bool IsCompleted { get; }
-
             bool GetResult();
 
-            void OnCompleted(Action continuation);
+            void OnCompleted(Action continuation, EPoll epoll);
         }
 
         interface IWritableAwaiter
@@ -175,21 +173,27 @@ namespace Tmds.Kestrel.Linux
         struct ReadableAwaitable: ICriticalNotifyCompletion
         {
             private readonly IReadableAwaiter _awaiter;
+            private readonly EPoll _epoll;
 
-            public ReadableAwaitable(TSocket awaiter)
+            public ReadableAwaitable(TSocket awaiter, EPoll epoll)
             {
                 _awaiter = awaiter;
+                _epoll = epoll;
             }
 
-            public bool IsCompleted => _awaiter.IsCompleted;
+            public bool IsCompleted => false;
 
             public bool GetResult() => _awaiter.GetResult();
 
             public ReadableAwaitable GetAwaiter() => this;
 
-            public void UnsafeOnCompleted(Action continuation) => _awaiter.OnCompleted(continuation);
+            public void UnsafeOnCompleted(Action continuation) => OnCompleted(continuation);
 
-            public void OnCompleted(Action continuation) => _awaiter.OnCompleted(continuation);
+            public void OnCompleted(Action continuation)
+            {
+                var tsocket = _awaiter as TSocket;
+                _awaiter.OnCompleted(continuation, _epoll);
+            }
         }
 
         struct WritableAwaitable: ICriticalNotifyCompletion
