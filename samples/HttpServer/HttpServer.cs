@@ -30,11 +30,11 @@ namespace ConsoleApplication
         
         public IConnectionContext OnConnection(IConnectionInformation connectionInfo, PipeOptions inputOptions, PipeOptions outputOptions)
         {
-            const int maxSize = 2000;
+            /*const int maxSize = 2000;
             inputOptions.MaximumSizeHigh = maxSize;
             inputOptions.MaximumSizeLow = maxSize;
             outputOptions.MaximumSizeHigh = maxSize;
-            outputOptions.MaximumSizeLow = maxSize;
+            outputOptions.MaximumSizeLow = maxSize;*/
 
             var input = _pipeFactory.Create(inputOptions);
             var output = _pipeFactory.Create(outputOptions);
