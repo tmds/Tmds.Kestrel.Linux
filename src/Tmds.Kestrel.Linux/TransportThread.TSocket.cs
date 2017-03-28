@@ -7,7 +7,7 @@ using Kestrel;
 
 namespace Tmds.Kestrel.Linux
 {
-    partial class TransportThread
+    sealed partial class TransportThread
     {
         [Flags]
         enum SocketFlags
