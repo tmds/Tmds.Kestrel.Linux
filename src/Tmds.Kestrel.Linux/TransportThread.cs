@@ -426,9 +426,12 @@ namespace Tmds.Kestrel.Linux
                             }
                             else if (result == PosixResult.EAGAIN || result == PosixResult.EWOULDBLOCK)
                             {
-                                if (!_coalesceWrites)
+                                end = buffer.Start;
+                                if (!_coalesceWrites
+                                  && !await Writable(tsocket))
                                 {
-                                    await Writable(tsocket);
+                                    // TransportThread stopped
+                                    break;
                                 }
                             }
                             else
