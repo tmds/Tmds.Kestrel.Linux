@@ -522,6 +522,7 @@ namespace Tmds.Kestrel.Linux
 
         private async void ReadFromSocketAvailable(TSocket tsocket, IPipeWriter writer, bool dataMayBeAvailable)
         {
+            // await Readable(tsocket) will yield to the PollThread
             try
             {
                 var availableBytes = dataMayBeAvailable ? tsocket.Socket.GetAvailableBytes() : 0;
@@ -585,6 +586,7 @@ namespace Tmds.Kestrel.Linux
 
         private async void ReadFromSocketFixed(TSocket tsocket, IPipeWriter writer, bool dataMayBeAvailable)
         {
+            // await Readable(tsocket) will yield to the PollThread
             try
             {
                 bool eof = false;
