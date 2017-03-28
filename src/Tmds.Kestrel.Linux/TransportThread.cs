@@ -23,7 +23,7 @@ namespace Tmds.Kestrel.Linux
         private const int DupKeyMask        = 1 << 31;
         private static PipeOptions s_inputPipeOptions = new PipeOptions()
         {
-            // Would be nice if we could set this to limit prefetching to 1 receive
+            // Would be nice if we could set this to 1 to limit prefetching to a single receive
             // but we can't: https://github.com/dotnet/corefxlab/issues/1355
             // ((Don't prefetch: ReadAsync receives new bytes when all previous bytes are read
             // Retrieving new bytes is synchronous with the ReadAsync call))
