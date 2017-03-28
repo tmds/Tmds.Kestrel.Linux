@@ -642,9 +642,8 @@ namespace Tmds.Kestrel.Linux
             // https://github.com/dotnet/corefxlab/issues/1233
             // We do it anyhow, but we need to make sure we fill every Memory we allocate.
 
-            const int bytesPerMemory    = MaxPooledBlockLength;
             int ioVectorLength = availableBytes <= wb.Buffer.Length ? 1 :
-                    Math.Min(1 + (availableBytes - wb.Buffer.Length + bytesPerMemory - 1) / bytesPerMemory, MaxIOVectorLength);
+                    Math.Min(1 + (availableBytes - wb.Buffer.Length + MaxPooledBlockLength - 1) / MaxPooledBlockLength, MaxIOVectorLength);
             var ioVectors = stackalloc IOVector[ioVectorLength];
 
             var allocated = 0;
