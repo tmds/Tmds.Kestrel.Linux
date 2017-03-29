@@ -415,10 +415,17 @@ namespace Tmds.Kestrel.Linux
                 while (true)
                 {
                     var readResult = await reader.ReadAsync();
+                    if (readResult.IsCancelled)
+                    {
+                        reader.Advance(readResult.Buffer.End);
+                        // TransportThread stopped
+                        break;
+                    }
                     if (_coalesceWrites)
                     {
                         if (!await CoalescingWrites(tsocket))
                         {
+                            reader.Advance(readResult.Buffer.End);
                             // TransportThread stopped
                             break;
                         }
@@ -427,7 +434,7 @@ namespace Tmds.Kestrel.Linux
                     ReadCursor end = buffer.End;
                     try
                     {
-                        if ((buffer.IsEmpty && readResult.IsCompleted) || readResult.IsCancelled)
+                        if (buffer.IsEmpty && readResult.IsCompleted)
                         {
                             // EOF or TransportThread stopped
                             break;
@@ -811,7 +818,6 @@ namespace Tmds.Kestrel.Linux
             var pipeReadKey = _pipeEnds.ReadEnd.DangerousGetHandle().ToInt32();
             TSocket pipeReadSocket;
             _sockets.TryRemove(pipeReadKey, out pipeReadSocket);
-            _pipeEnds.Dispose();
 
             foreach (var kv in _sockets)
             {
@@ -821,6 +827,14 @@ namespace Tmds.Kestrel.Linux
                 tsocket.CompleteReadable(stopping: true);
                 tsocket.CompleteWritable(stopping: true);
             }
+
+            SpinWait sw = new SpinWait();
+            while (!_sockets.IsEmpty)
+            {
+                sw.SpinOnce();
+            }
+
+            _pipeEnds.Dispose();
 
             TaskCompletionSource<object> tcs;
             lock (_gate)
