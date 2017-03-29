@@ -415,41 +415,40 @@ namespace Tmds.Kestrel.Linux
                 while (true)
                 {
                     var readResult = await reader.ReadAsync();
-                    if (readResult.IsCancelled)
-                    {
-                        reader.Advance(readResult.Buffer.End);
-                        // TransportThread stopped
-                        break;
-                    }
+                    ReadableBuffer buffer = readResult.Buffer;
                     if (_coalesceWrites)
                     {
-                        if (!await CoalescingWrites(tsocket))
-                        {
-                            reader.Advance(readResult.Buffer.End);
-                            // TransportThread stopped
-                            break;
-                        }
-                    }
-                    var buffer = readResult.Buffer;
-                    ReadCursor end = buffer.End;
-                    try
-                    {
-                        if (buffer.IsEmpty && readResult.IsCompleted)
+                        reader.Advance(default(ReadCursor));
+                        if ((buffer.IsEmpty && readResult.IsCompleted) || readResult.IsCancelled)
                         {
                             // EOF or TransportThread stopped
                             break;
                         }
-
+                        if (!await CoalescingWrites(tsocket))
+                        {
+                            // TransportThread stopped
+                            break;
+                        }
+                        readResult = await reader.ReadAsync();
+                        buffer = readResult.Buffer;
+                    }
+                    ReadCursor end = buffer.Start;
+                    try
+                    {
+                        if ((buffer.IsEmpty && readResult.IsCompleted) || readResult.IsCancelled)
+                        {
+                            // EOF or TransportThread stopped
+                            break;
+                        }
                         if (!buffer.IsEmpty)
                         {
                             var result = TrySend(tsocket.Socket, ref buffer);
                             if (result.IsSuccess && result.Value != 0)
                             {
-                                end = buffer.Move(buffer.Start, result.Value);
+                                end = result.Value == buffer.Length ? buffer.End : buffer.Move(buffer.Start, result.Value);
                             }
                             else if (result == PosixResult.EAGAIN || result == PosixResult.EWOULDBLOCK)
                             {
-                                end = buffer.Start;
                                 if (!await Writable(tsocket))
                                 {
                                     // TransportThread stopped
