@@ -11,6 +11,10 @@
 #include <string.h>
 #include <fcntl.h>
 
+#ifndef SO_INCOMING_CPU
+#define SO_INCOMING_CPU 49
+#endif
+
 struct PalSocketAddress
 {
     int16_t Family;
