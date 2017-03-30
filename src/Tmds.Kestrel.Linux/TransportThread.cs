@@ -167,7 +167,10 @@ namespace Tmds.Kestrel.Linux
                     {
                         if (_cpuId != -1)
                         {
-                            acceptSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.IncomingCpu, _cpuId);
+                            if (!acceptSocket.TrySetSocketOption(SocketOptionLevel.Socket, SocketOptionName.IncomingCpu, _cpuId))
+                            {
+                                // TODO: log
+                            }
                         }
                         else
                         {
