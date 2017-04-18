@@ -1,6 +1,14 @@
 language: c
 sudo: required
 dist: trusty
+addons:
+  apt:
+    packages:
+    - libunwind8
+env:
+  global:
+    - DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+    - DOTNET_CLI_TELEMETRY_OPTOUT: 1
 before_install:
 - wget https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/dotnet-install.sh
 - echo '#!/bin/bash' | cat - dotnet-install.sh > dotnet-install.sh.patched && mv dotnet-install.sh.patched dotnet-install.sh
