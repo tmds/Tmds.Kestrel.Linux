@@ -125,6 +125,7 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
             int key = 0;
             int port = endPoint.Port;
             SocketFlags flags = SocketFlags.TypeAccept;
+            flags |= transportOptions.YieldReceive ? SocketFlags.YieldReceive : SocketFlags.None;
             try
             {
                 bool ipv4 = endPoint.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork;
@@ -469,7 +470,7 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
 
                     tsocket = new TSocket(threadContext)
                     {
-                        Flags = SocketFlags.TypeClient,
+                        Flags = SocketFlags.TypeClient | (tacceptSocket.Flags & SocketFlags.YieldReceive),
                         Key = key,
                         Socket = clientSocket,
                         PeerAddress = clientSocket.GetPeerIPAddress(),
@@ -653,6 +654,10 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
                 }
                 while (availableBytes != 0)
                 {
+                    if ((tsocket.Flags & SocketFlags.YieldReceive) != 0)
+                    {
+                        await Task.Yield();
+                    }
                     var buffer = writer.Alloc(2048);
                     try
                     {

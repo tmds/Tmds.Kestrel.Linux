@@ -11,6 +11,8 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
 
         public bool DeferSend { get; set; } = true;
 
+        public bool YieldReceive { get; set; } = false;
+
         public CpuSet CpuSet { get; set; }
 
         public int ThreadCount

@@ -23,7 +23,8 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
             TypeClient      = 0x20,
             TypeMask        = 0x30,
 
-            DeferAccept     = 0x40
+            DeferAccept     = 0x40,
+            YieldReceive    = 0x80
         }
 
         class TSocket : IConnectionInformation

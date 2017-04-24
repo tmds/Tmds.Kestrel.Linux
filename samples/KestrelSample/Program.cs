@@ -54,6 +54,7 @@ namespace SampleApp
                 Console.WriteLine("  Linux transport specific:");
                 Console.WriteLine("\tta       Set thread affinity");
                 Console.WriteLine("\tic       Receive on incoming cpu (implies ta)");
+                Console.WriteLine("\tyr       Receive on ThreadPool");
                 Console.WriteLine("\t-c<cpus> Cpus for transport threads (implies ta, count = default for -t)");
                 Console.WriteLine("\tnoda     No deferred accept");
                 Console.WriteLine("\tnods     No deferred send");
@@ -70,6 +71,7 @@ namespace SampleApp
             bool ic = args.Contains("ic");
             bool ds = !args.Contains("nods");
             bool da = !args.Contains("noda");
+            bool yr = args.Contains("yr");
             bool tt = !args.Contains("nott");
             _log = args.Contains("log");
             int threadCount = 0;
@@ -123,6 +125,7 @@ namespace SampleApp
                     options.DeferAccept = da;
                     options.DeferSend = ds;
                     options.CpuSet = cpuSet;
+                    options.YieldReceive = yr;
                 });
             }
 

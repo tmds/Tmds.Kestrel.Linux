@@ -26,7 +26,7 @@ namespace RedHatX.AspNetCore.Server.Kestrel.Transport.Linux
                 _schedulerRunning = new Queue<ScheduledAction>(1024);
                 PipeEnds = PipeEnd.CreatePair(blocking: false);
                 _epollState = EPollBlocked;
-                SendScheduler = transportOptions.DeferSend ? this as IScheduler : InlineScheduler.Default;
+                SendScheduler = transportOptions.DeferSend ? this as IScheduler: InlineScheduler.Default as IScheduler;
             }
 
             public readonly EPoll EPoll;
